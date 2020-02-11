@@ -11,8 +11,7 @@ Install dependencies.
 npm install
 ```
 
-Get your own Kakao maps and Seoul bike API keys.
-Create .env file in the project's root directory.
+Get your own Kakao maps and Seoul bike API keys and create .env file in the project's root directory.
 
 ```
 REACT_APP_KAKAO_MAPS_API_KEY=YOUR_API_KEY
@@ -27,8 +26,8 @@ npm start
 
 ## Todo
 
-Create search functionality.
-Create InfoWindow to show detailed status of individual station.
+1. Create search functionality.
+2. Create InfoWindow to show detailed status of individual station.
 
 ## License
 
