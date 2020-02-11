@@ -25,6 +25,11 @@ You can start a Webpack development server and test out the project.
 npm start
 ```
 
+## Todo
+
+Create search functionality.
+Create InfoWindow to show detailed status of individual station.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
