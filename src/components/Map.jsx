@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import markerX from "../images/map-marker-oos.png";
 import marker0 from "../images/map-marker0.png";
 import marker13 from "../images/map-marker13.png";
 import marker46 from "../images/map-marker46.png";
@@ -10,11 +9,12 @@ const MapContainer = styled.div`
   height: 100%;
 `;
 
-const Map = () => {
+const Map = ({ kakaoCoords, setKakaoCoords }) => {
   const mapContainer = useRef();
   const [map, setMap] = useState();
   const [stations, setStations] = useState([]);
-  const [bounds, setBounds] = useState({});
+  // eslint-disable-next-line no-unused-vars
+  // const [bounds, setBounds] = useState({});
 
   useEffect(() => {
     const newMap = new window.kakao.maps.Map(mapContainer.current, {
@@ -28,13 +28,13 @@ const Map = () => {
     newMap.addControl(mapTypeCtrl, window.kakao.maps.ControlPosition.TOPRIGHT);
     newMap.addControl(zoomCtrl, window.kakao.maps.ControlPosition.RIGHT);
 
-    window.kakao.maps.event.addListener(newMap, "bounds_changed", () => {
-      const boundary = newMap.getBounds();
-      const sw = boundary.getSouthWest();
-      const ne = boundary.getNorthEast();
+    // window.kakao.maps.event.addListener(newMap, "bounds_changed", () => {
+    //   const boundary = newMap.getBounds();
+    //   const sw = boundary.getSouthWest();
+    //   const ne = boundary.getNorthEast();
 
-      setBounds({ sw, ne });
-    });
+    //   setBounds({ sw, ne });
+    // });
 
     setMap(newMap);
   }, [mapContainer]);
@@ -42,21 +42,22 @@ const Map = () => {
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(({ coords }) => {
-        const userLocation = new window.kakao.maps.LatLng(
-          coords.latitude,
-          coords.longitude
+        setKakaoCoords(
+          new window.kakao.maps.LatLng(coords.latitude, coords.longitude)
         );
-
-        if (map) {
-          map.setCenter(userLocation);
-        }
       });
     } else {
       alert(
         "Your browser doesn't support location feature. You can still search your location on the top right corner of the page."
       );
     }
-  }, [map]);
+  }, [setKakaoCoords]);
+
+  useEffect(() => {
+    if (map && kakaoCoords) {
+      map.setCenter(kakaoCoords);
+    }
+  }, [kakaoCoords, map]);
 
   useEffect(() => {
     const fetchStations = async (start, end) => {
@@ -114,6 +115,7 @@ const Map = () => {
           imgSize,
           imgOption
         );
+
         const markerPos = new window.kakao.maps.LatLng(coord.lat, coord.lng);
 
         new window.kakao.maps.Marker({

@@ -1,6 +1,6 @@
 # VélôSéoul
 
-Visualizing current status of seoul bike(따릉이) stations.
+Visualizing real time status of seoul bike(따릉이) stations.
 Built with React, [Kakao Maps API](http://apis.map.kakao.com) and [Seoul Bike API](http://data.seoul.go.kr/dataList/OA-15493/A/1/datasetView.do).
 
 ## Getting Started
@@ -26,8 +26,9 @@ npm start
 
 ## Todo
 
-1. Create search functionality.
+1. ~~Create search functionality.~~
 2. Create InfoWindow to show detailed status of individual station.
+3. If there's no station in the map bounds, show modal saying "No stations found near your location."
 
 ## License
 
