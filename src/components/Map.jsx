@@ -6,24 +6,25 @@ import marker46 from "../images/map-marker46.png";
 import marker7 from "../images/map-marker7.png";
 
 const MapContainer = styled.div`
-  height: 100%;
+  height: calc(100vh - 60px);
 `;
+
+const { kakao } = window;
 
 const Map = ({ kakaoCoords, setKakaoCoords }) => {
   const mapContainer = useRef();
   const [map, setMap] = useState();
   const [stations, setStations] = useState([]);
-  // eslint-disable-next-line no-unused-vars
   // const [bounds, setBounds] = useState({});
 
   useEffect(() => {
-    const newMap = new window.kakao.maps.Map(mapContainer.current, {
-      center: new window.kakao.maps.LatLng(37.5669, 126.9787),
+    const newMap = new kakao.maps.Map(mapContainer.current, {
+      center: new kakao.maps.LatLng(37.5669, 126.9787),
       level: 4
     });
 
-    const mapTypeCtrl = new window.kakao.maps.MapTypeControl();
-    const zoomCtrl = new window.kakao.maps.ZoomControl();
+    const mapTypeCtrl = new kakao.maps.MapTypeControl();
+    const zoomCtrl = new kakao.maps.ZoomControl();
 
     newMap.addControl(mapTypeCtrl, window.kakao.maps.ControlPosition.TOPRIGHT);
     newMap.addControl(zoomCtrl, window.kakao.maps.ControlPosition.RIGHT);
@@ -43,7 +44,7 @@ const Map = ({ kakaoCoords, setKakaoCoords }) => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(({ coords }) => {
         setKakaoCoords(
-          new window.kakao.maps.LatLng(coords.latitude, coords.longitude)
+          new kakao.maps.LatLng(coords.latitude, coords.longitude)
         );
       });
     } else {
@@ -56,6 +57,9 @@ const Map = ({ kakaoCoords, setKakaoCoords }) => {
   useEffect(() => {
     if (map && kakaoCoords) {
       map.setCenter(kakaoCoords);
+
+      const marker = new kakao.maps.Marker({ position: kakaoCoords });
+      marker.setMap(map);
     }
   }, [kakaoCoords, map]);
 
@@ -96,8 +100,8 @@ const Map = ({ kakaoCoords, setKakaoCoords }) => {
   useEffect(() => {
     if (stations) {
       stations.forEach(({ bikeCount, coord }) => {
-        const imgSize = new window.kakao.maps.Size(30, 40);
-        const imgOption = { offset: new window.kakao.maps.Point(15, 40) };
+        const imgSize = new kakao.maps.Size(30, 40);
+        const imgOption = { offset: new kakao.maps.Point(15, 40) };
         let imgSrc = "";
 
         if (bikeCount >= 7) {
@@ -110,15 +114,15 @@ const Map = ({ kakaoCoords, setKakaoCoords }) => {
           imgSrc = marker0;
         }
 
-        const markerImg = new window.kakao.maps.MarkerImage(
+        const markerImg = new kakao.maps.MarkerImage(
           imgSrc,
           imgSize,
           imgOption
         );
 
-        const markerPos = new window.kakao.maps.LatLng(coord.lat, coord.lng);
+        const markerPos = new kakao.maps.LatLng(coord.lat, coord.lng);
 
-        new window.kakao.maps.Marker({
+        new kakao.maps.Marker({
           position: markerPos,
           clickable: true,
           image: markerImg

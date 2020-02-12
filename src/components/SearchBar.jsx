@@ -20,6 +20,7 @@ const StyledSearchForm = styled.form`
 
   input::placeholder {
     color: white;
+    font-size: 14px;
   }
 
   button {
@@ -39,11 +40,17 @@ const StyledSearchForm = styled.form`
       width: 150px;
     }
 
+    input::placeholder {
+      font-size: 11px;
+    }
+
     button {
       width: 40px;
     }
   }
 `;
+
+const { kakao } = window;
 
 const SearchBar = ({ setKakaoCoords }) => {
   const [addr, setAddr] = useState("");
@@ -55,11 +62,11 @@ const SearchBar = ({ setKakaoCoords }) => {
   const handleSubmit = e => {
     e.preventDefault();
 
-    const geocoder = new window.kakao.maps.services.Geocoder();
+    const geocoder = new kakao.maps.services.Geocoder();
 
     geocoder.addressSearch(addr, (result, status) => {
       if (status === window.kakao.maps.services.Status.OK) {
-        setKakaoCoords(new window.kakao.maps.LatLng(result[0].y, result[0].x));
+        setKakaoCoords(new kakao.maps.LatLng(result[0].y, result[0].x));
       } else {
         setKakaoCoords(null);
         console.log("주소를 찾을 수 없습니다.");
@@ -71,7 +78,7 @@ const SearchBar = ({ setKakaoCoords }) => {
     <StyledSearchForm onSubmit={handleSubmit}>
       <input
         type="text"
-        placeholder="주소 검색"
+        placeholder="행정구역명 또는 주소 입력"
         onChange={handleAddrChange}
         value={addr}
       />

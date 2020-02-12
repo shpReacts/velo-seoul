@@ -26,7 +26,7 @@ const Nav = styled.nav`
 const Navigation = ({ setKakaoCoords }) => {
   return (
     <Nav>
-      <img className="logo" src={logo} alt="logo of veloseoul" />
+      <img className="logo" src={logo} alt="veloseoul" />
       <SearchBar setKakaoCoords={setKakaoCoords} />
     </Nav>
   );
