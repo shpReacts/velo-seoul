@@ -23,11 +23,11 @@ const Nav = styled.nav`
   }
 `;
 
-const Navigation = ({ setKakaoCoords }) => {
+const Navigation = ({ setKakaoCoords, setAccuracy }) => {
   return (
     <Nav>
       <img className="logo" src={logo} alt="veloseoul" />
-      <SearchBar setKakaoCoords={setKakaoCoords} />
+      <SearchBar setKakaoCoords={setKakaoCoords} setAccuracy={setAccuracy} />
     </Nav>
   );
 };

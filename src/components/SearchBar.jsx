@@ -52,7 +52,7 @@ const StyledSearchForm = styled.form`
 
 const { kakao } = window;
 
-const SearchBar = ({ setKakaoCoords }) => {
+const SearchBar = ({ setKakaoCoords, setAccuracy }) => {
   const [addr, setAddr] = useState("");
 
   const handleAddrChange = e => {
@@ -67,6 +67,7 @@ const SearchBar = ({ setKakaoCoords }) => {
     geocoder.addressSearch(addr, (result, status) => {
       if (status === window.kakao.maps.services.Status.OK) {
         setKakaoCoords(new kakao.maps.LatLng(result[0].y, result[0].x));
+        setAccuracy(1);
       } else {
         setKakaoCoords(null);
         console.log("주소를 찾을 수 없습니다.");
