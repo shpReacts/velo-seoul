@@ -1,3 +1,5 @@
+/*global kakao*/
+
 import React, { useState } from "react";
 import styled from "styled-components";
 import { FaSearch } from "react-icons/fa";
@@ -49,8 +51,6 @@ const StyledSearchForm = styled.form`
     }
   }
 `;
-
-const { kakao } = window;
 
 const SearchBar = ({ setKakaoCoords, setAccuracy }) => {
   const [addr, setAddr] = useState("");

@@ -30,6 +30,7 @@ npm start
 1. ~~Create search functionality.~~
 2. Create InfoWindow to show detailed status of individual station.
 3. If there's no station in the map bounds, show modal saying "No stations found near your location."
+4. Implement Redux. (Currently, The app has excessive number of prop-drilling.)
 
 ## License
 
