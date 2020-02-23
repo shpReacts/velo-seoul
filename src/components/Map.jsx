@@ -1,133 +1,130 @@
-import React, { useState, useEffect, useRef } from "react";
+/*global kakao*/
+
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { renderToString } from "react-dom/server";
-import { getDistance } from "geolib";
+import { useDispatch, useSelector } from "react-redux";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+
+import { createCloseStationsAction } from "../modules/closeStations";
+import { createUserCoordsAction } from "../modules/userCoords";
+
+import useStations from "../hooks/useStations";
 
 import marker0 from "../images/map-marker0.png";
 import marker13 from "../images/map-marker13.png";
 import marker46 from "../images/map-marker46.png";
 import marker7 from "../images/map-marker7.png";
-import InfoWindow from "./InfoWindow";
+import Modal from "./Modal";
 
 const StyledMap = styled.div`
   height: calc(100vh - 60px);
 `;
 
-const { kakao } = window;
-
-const Map = ({ kakaoCoords, setKakaoCoords, accuracy, setAccuracy }) => {
-  const mapContainer = useRef();
+const Map = () => {
   const [map, setMap] = useState();
-  const [stations, setStations] = useState([]);
   const [centerCoords, setCenterCoords] = useState();
-  const [closeStations, setCloseStations] = useState([]);
-  const [markers, setMarkers] = useState([]);
 
-  console.log(kakao);
+  const [stations, isLoading, error] = useStations();
 
+  const dispatch = useDispatch();
+
+  const closeStations = useSelector(store => store.closeStations);
+  const userCoords = useSelector(store => store.userCoords);
+
+  // kakao maps scirpt를 동적으로 로드
   useEffect(() => {
-    const newMap = new kakao.maps.Map(document.getElementById("map"), {
-      center: new kakao.maps.LatLng(37.5669, 126.9787),
-      level: 2
-    });
+    // load script dynamically
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_KAKAO_MAPS_API_KEY}&libraries=services&autoload=false`;
+    document.head.appendChild(script);
 
-    const mapTypeCtrl = new kakao.maps.MapTypeControl();
-    const zoomCtrl = new kakao.maps.ZoomControl();
+    let newMap;
+    let idleHandler;
 
-    newMap.addControl(mapTypeCtrl, window.kakao.maps.ControlPosition.TOPRIGHT);
-    newMap.addControl(zoomCtrl, window.kakao.maps.ControlPosition.RIGHT);
+    script.onload = () => {
+      kakao.maps.load(() => {
+        const mapContainer = document.getElementById("map");
 
-    const idleHandler = () => {
-      setCenterCoords(newMap.getCenter());
-    };
+        newMap = new kakao.maps.Map(mapContainer, {
+          center: new kakao.maps.LatLng(37.5669, 126.9787),
+          level: 4
+        });
+        setCenterCoords(newMap.getCenter());
 
-    kakao.maps.event.addListener(newMap, "idle", idleHandler);
+        // put map controls on map
+        const mapTypeCtrl = new kakao.maps.MapTypeControl();
+        newMap.addControl(mapTypeCtrl, kakao.maps.ControlPosition.TOPRIGHT);
 
-    setMap(newMap);
+        const zoomCtrl = new kakao.maps.ZoomControl();
+        newMap.addControl(zoomCtrl, kakao.maps.ControlPosition.RIGHT);
 
-    return () => {
-      kakao.maps.event.removeListener(newMap, "idle", idleHandler);
-    };
-  }, [setKakaoCoords]);
+        idleHandler = () => {
+          setCenterCoords(newMap.getCenter());
+        };
 
-  useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(({ coords }) => {
-        setKakaoCoords(
-          new kakao.maps.LatLng(coords.latitude, coords.longitude)
-        );
-        setAccuracy(coords.accuracy);
+        kakao.maps.event.addListener(newMap, "idle", idleHandler);
+
+        setMap(newMap);
       });
-    } else {
-      alert(
-        "Your browser doesn't support location feature. You can still search your location on the top right corner of the page."
-      );
-    }
-  }, [setKakaoCoords, setAccuracy]);
-
-  useEffect(() => {
-    if (map && kakaoCoords) {
-      map.setCenter(kakaoCoords);
-
-      const marker = new kakao.maps.Marker({ position: kakaoCoords });
-      marker.setMap(map);
-    }
-  }, [kakaoCoords, map]);
-
-  useEffect(() => {
-    const fetchStations = async (start, end) => {
-      const response = await fetch(
-        `http://openapi.seoul.go.kr:8088/${process.env.REACT_APP_SEOUL_BIKE_API_KEY}/json/bikeList/${start}/${end}/`
-      );
-      const data = await response.json();
-
-      if (data.rentBikeStatus.RESULT.CODE === "INFO-000") {
-        setStations(prevStations => [
-          ...prevStations,
-          ...data.rentBikeStatus.row.map(
-            ({
-              stationName,
-              stationLatitude,
-              stationLongitude,
-              parkingBikeTotCnt
-            }) => ({
-              name: stationName,
-              coord: { latitude: stationLatitude, longitude: stationLongitude },
-              bikeCount: parkingBikeTotCnt
-            })
-          )
-        ]);
-      } else {
-        alert(
-          "현재 서울특별시 공공자전거 실시간 대여정보가 제공되지 않고 있습니다. 나중에 다시 시도해주십시오."
-        );
-      }
     };
 
-    fetchStations(1, 1000);
-    fetchStations(1001, 2000);
+    // event listener cleanup
+    return () => kakao.maps.event.removeListener(newMap, "idle", idleHandler);
   }, []);
 
+  // 사용자의 현재 위치 조회
   useEffect(() => {
-    if (stations && centerCoords) {
-      setCloseStations(
-        stations.filter(station => {
-          const distance = getDistance(
-            station.coord,
-            { latitude: centerCoords.Ha, longitude: centerCoords.Ga },
-            accuracy
-          );
+    if (map) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          ({ coords }) => {
+            const newUserCoords = new kakao.maps.LatLng(
+              coords.latitude,
+              coords.longitude
+            );
 
-          return distance <= 500;
-        })
-      );
+            dispatch(createUserCoordsAction(newUserCoords));
+          },
+          err => {
+            dispatch(createUserCoordsAction(map.getCenter()));
+          }
+        );
+      } else {
+        alert(
+          "이 브라우저에서는 위치 기능을 사용할 수 없습니다. 우측 상단의 검색 기능을 이용하시거나 다른 브라우저로 다시 접속해주세요."
+        );
+      }
     }
-  }, [accuracy, centerCoords]);
+  }, [dispatch, map]);
 
+  // userCoords에 marker 렌더
   useEffect(() => {
-    let newMarker;
-    let handleClick;
+    let marker;
 
+    if (map && userCoords) {
+      map.setCenter(userCoords);
+      marker = new kakao.maps.Marker({ position: userCoords });
+
+      marker.setMap(map);
+    }
+
+    return () => {
+      if (marker) {
+        marker.setMap(null);
+      }
+    };
+  }, [userCoords, map]);
+
+  // 지도 중심에서 500m 반경 이내의 스테이션을 closeStations 상태 배열에 넣음
+  useEffect(() => {
+    if (map) {
+      dispatch(createCloseStationsAction(stations, centerCoords));
+    }
+  }, [centerCoords, dispatch, stations, map]);
+
+  // closeStations에 대한 marker를 지도에 렌더
+  useEffect(() => {
     closeStations.forEach(({ name, bikeCount, coord }) => {
       const imgSize = new kakao.maps.Size(30, 40);
       const imgOption = { offset: new kakao.maps.Point(15, 40) };
@@ -147,7 +144,7 @@ const Map = ({ kakaoCoords, setKakaoCoords, accuracy, setAccuracy }) => {
 
       const markerPos = new kakao.maps.LatLng(coord.latitude, coord.longitude);
 
-      newMarker = new kakao.maps.Marker({
+      const newMarker = new kakao.maps.Marker({
         position: markerPos,
         clickable: true,
         image: markerImg
@@ -155,26 +152,65 @@ const Map = ({ kakaoCoords, setKakaoCoords, accuracy, setAccuracy }) => {
 
       newMarker.setMap(map);
 
-      setMarkers(prevMarkers => [...prevMarkers, newMarker]);
-
-      const overlay = new kakao.maps.CustomOverlay({
-        content: renderToString(<InfoWindow />),
-        map: map,
-        position: newMarker.getPosition()
-      });
-
-      handleClick = () => {
-        overlay.setMap(map);
+      const clearMarkers = () => {
+        newMarker.setMap(null);
       };
 
-      kakao.maps.event.addListener(newMarker, "click", handleClick);
+      kakao.maps.event.addListener(map, "center_changed", clearMarkers);
     });
-
-    return () =>
-      kakao.maps.event.removeListener(newMarker, "click", handleClick);
   }, [closeStations, map]);
 
-  return <StyledMap id="map" ref={mapContainer} />;
+  // 지도 중심에서 500m 반경을 표시
+  useEffect(() => {
+    if (map) {
+      const rad = new kakao.maps.Circle({
+        center: map.getCenter(),
+        radius: 500,
+        strokeWeight: 2,
+        strokeColor: "#ff6f6e",
+        strokeOpacity: 1,
+        strokeStyle: "solid",
+        fillColor: "#2c3e50",
+        fillOpacity: 0.2
+      });
+
+      rad.setMap(map);
+
+      const removeRad = () => {
+        rad.setMap(null);
+      };
+
+      kakao.maps.event.addListener(map, "center_changed", removeRad);
+
+      return () =>
+        kakao.maps.event.removeListener(map, "center_changed", removeRad);
+    }
+  }, [map, centerCoords]);
+
+  return (
+    <>
+      {isLoading && (
+        <Modal
+          msg1="서울시 공공자전거 실시간 정보를 불러오고 있습니다."
+          center
+        />
+      )}
+      {error && (
+        <Modal
+          msg1="서울시 공공자전거 API가 서비스되고 있지 않습니다. 잠시 후에 다시 시도해주세요."
+          center
+        />
+      )}
+      <StyledMap id="map" />
+      {!error && !isLoading && closeStations.length === 0 && (
+        <Modal
+          msg1="반경 500m 이내에 따릉이 스테이션이 없습니다."
+          msg2=" 다른 위치로 움직이거나 우측 상단 검색창을 이용해보세요."
+          center
+        />
+      )}
+    </>
+  );
 };
 
 export default Map;

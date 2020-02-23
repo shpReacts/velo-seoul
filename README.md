@@ -1,7 +1,7 @@
 # VélôSéoul
 
 Visualizing real time status of seoul bike(따릉이) stations.\
-Built with React, [Kakao Maps API](http://apis.map.kakao.com) and [Seoul Bike API](http://data.seoul.go.kr/dataList/OA-15493/A/1/datasetView.do).\
+Built with React, Redux, [Kakao Maps API](http://apis.map.kakao.com) and [Seoul Bike API](http://data.seoul.go.kr/dataList/OA-15493/A/1/datasetView.do).\
 Styled with [styled-components](https://styled-components.com/).
 
 ## Getting Started
@@ -28,8 +28,8 @@ npm start
 ## Todo
 
 1. ~~Create search functionality.~~
-2. Create InfoWindow to show detailed status of individual station.
-3. If there's no station in the map bounds, show modal saying "No stations found near your location."
+2. ~~If there's no station in the map bounds, show modal saying "No stations found near your location."~~
+3. ~~Implement Redux. (Currently, The app has excessive number of prop-drilling.)~~
 
 ## License
 
