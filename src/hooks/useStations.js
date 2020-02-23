@@ -7,12 +7,12 @@ export default function useStations() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchStations = async (start, end) => {
+    const fetchStations = async part => {
       setIsLoading(true);
 
       try {
         const res = await axios.get(
-          `http://openapi.seoul.go.kr:8088/${process.env.REACT_APP_SEOUL_BIKE_API_KEY}/json/bikeList/${start}/${end}/`
+          `https://us-central1-veloseoul-604e9.cloudfunctions.net/widgets/${part}`
         );
 
         if (res.data.rentBikeStatus.RESULT.CODE === "INFO-000") {
@@ -44,8 +44,8 @@ export default function useStations() {
       }
     };
 
-    fetchStations(1, 1000);
-    fetchStations(1001, 2000);
+    fetchStations("first");
+    fetchStations("second");
   }, []);
 
   return [stations, isLoading, error];
