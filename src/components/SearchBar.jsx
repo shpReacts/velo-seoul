@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { FaSearch } from "react-icons/fa";
 import { lighten } from "polished";
+import { useDispatch } from "react-redux";
+
+import { createUserCoordsAction } from "../modules/userCoords";
 
 const StyledSearchForm = styled.form`
   height: 60%;
@@ -52,8 +55,10 @@ const StyledSearchForm = styled.form`
   }
 `;
 
-const SearchBar = ({ setKakaoCoords, setAccuracy }) => {
+const SearchBar = () => {
   const [addr, setAddr] = useState("");
+
+  const dispatch = useDispatch();
 
   const handleAddrChange = e => {
     setAddr(e.target.value);
@@ -66,11 +71,13 @@ const SearchBar = ({ setKakaoCoords, setAccuracy }) => {
 
     geocoder.addressSearch(addr, (result, status) => {
       if (status === window.kakao.maps.services.Status.OK) {
-        setKakaoCoords(new kakao.maps.LatLng(result[0].y, result[0].x));
-        setAccuracy(1);
+        const newUserCoords = new kakao.maps.LatLng(result[0].y, result[0].x);
+
+        dispatch(createUserCoordsAction(newUserCoords));
       } else {
-        setKakaoCoords(null);
-        console.log("주소를 찾을 수 없습니다.");
+        dispatch(createUserCoordsAction(null));
+
+        alert("존재하지 않는 주소 또는 행정구역명입니다. 다시 시도해주세요.");
       }
     });
   };
