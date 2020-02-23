@@ -31,6 +31,7 @@ npm start
 2. ~~If there's no station in the map bounds, show modal saying "No stations found near your location."~~
 3. ~~Implement Redux. (Currently, The app has excessive number of prop-drilling.)~~
 4. Apply better directory structure.
+5. Firebase hosting은 https인데 서울 공공데이터 API endpoint는 http여서 `mixed content` 오류가 남, firebase functions 사용하여 우회할 것
 
 ## License
 
