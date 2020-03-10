@@ -12,7 +12,7 @@ export default function useStations() {
 
       try {
         const res = await axios.get(
-          `https://us-central1-veloseoul-604e9.cloudfunctions.net/widgets/${part}`
+          `${process.env.REACT_APP_FIREBASE_FUNCTIONS_ENDPOINT}${part}`
         );
 
         if (res.data.rentBikeStatus.RESULT.CODE === "INFO-000") {
