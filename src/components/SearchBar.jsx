@@ -1,6 +1,6 @@
 /*global kakao*/
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import { FaSearch } from "react-icons/fa";
 import { lighten } from "polished";
@@ -58,6 +58,8 @@ const StyledSearchForm = styled.form`
 const SearchBar = () => {
   const [addr, setAddr] = useState("");
 
+  const inputRef = useRef();
+
   const dispatch = useDispatch();
 
   const handleAddrChange = e => {
@@ -66,6 +68,8 @@ const SearchBar = () => {
 
   const handleSubmit = e => {
     e.preventDefault();
+
+    inputRef.current.blur();
 
     const geocoder = new kakao.maps.services.Geocoder();
 
@@ -89,6 +93,7 @@ const SearchBar = () => {
         placeholder="행정구역명 또는 주소 입력"
         onChange={handleAddrChange}
         value={addr}
+        ref={inputRef}
       />
       <button type="submit">
         <FaSearch />

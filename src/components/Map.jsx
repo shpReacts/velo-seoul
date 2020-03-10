@@ -48,7 +48,7 @@ const Map = () => {
 
         newMap = new kakao.maps.Map(mapContainer, {
           center: new kakao.maps.LatLng(37.5669, 126.9787),
-          level: 4
+          level: 5
         });
         setCenterCoords(newMap.getCenter());
 
@@ -196,17 +196,13 @@ const Map = () => {
         />
       )}
       {error && (
-        <Modal
-          msg1="서울시 공공자전거 API가 서비스되지 않고 있습니다. 잠시 후에 다시 시도해주세요."
-          center
-        />
+        <Modal msg1="서울시 공공자전거 API가 서비스되지 않고 있습니다. 잠시 후에 다시 시도해주세요." />
       )}
       <StyledMap id="map" />
       {!error && !isLoading && closeStations.length === 0 && (
         <Modal
           msg1="반경 500m 이내에 따릉이 스테이션이 없습니다."
           msg2=" 다른 위치로 움직이거나 우측 상단 검색창을 이용해보세요."
-          center
         />
       )}
     </>

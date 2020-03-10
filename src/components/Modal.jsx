@@ -17,7 +17,7 @@ const StyledModal = styled.div`
   background-color: ${transparentize(0.2, "#2c3e50")};
   color: white;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 
   p {
     margin: 0;
