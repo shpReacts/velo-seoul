@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
-import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
 import { createCloseStationsAction } from "../modules/closeStations";
 import { createUserCoordsAction } from "../modules/userCoords";
@@ -22,12 +21,9 @@ const StyledMap = styled.div`
 
 const Map = () => {
   const [map, setMap] = useState();
-  const [centerCoords, setCenterCoords] = useState();
-
   const [stations, isLoading, error] = useStations();
 
   const dispatch = useDispatch();
-
   const closeStations = useSelector(store => store.closeStations);
   const userCoords = useSelector(store => store.userCoords);
 
@@ -39,19 +35,14 @@ const Map = () => {
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_KAKAO_MAPS_API_KEY}&libraries=services&autoload=false`;
     document.head.appendChild(script);
 
-    let newMap;
-    let idleHandler;
-
     script.onload = () => {
       kakao.maps.load(() => {
         const mapContainer = document.getElementById("map");
 
-        newMap = new kakao.maps.Map(mapContainer, {
+        const newMap = new kakao.maps.Map(mapContainer, {
           center: new kakao.maps.LatLng(37.5669, 126.9787),
           level: 5
         });
-        setCenterCoords(newMap.getCenter());
-
         // put map controls on map
         const mapTypeCtrl = new kakao.maps.MapTypeControl();
         newMap.addControl(mapTypeCtrl, kakao.maps.ControlPosition.TOPRIGHT);
@@ -59,37 +50,37 @@ const Map = () => {
         const zoomCtrl = new kakao.maps.ZoomControl();
         newMap.addControl(zoomCtrl, kakao.maps.ControlPosition.RIGHT);
 
-        idleHandler = () => {
-          setCenterCoords(newMap.getCenter());
-        };
-
-        kakao.maps.event.addListener(newMap, "idle", idleHandler);
-
         setMap(newMap);
+        dispatch(createUserCoordsAction(newMap.getCenter()));
       });
     };
+  }, [dispatch]);
 
-    // event listener cleanup
-    return () => kakao.maps.event.removeListener(newMap, "idle", idleHandler);
-  }, []);
+  useEffect(() => {
+    if (map) {
+      const movementHandler = () => {
+        dispatch(createUserCoordsAction(map.getCenter()));
+      };
+
+      kakao.maps.event.addListener(map, "idle", movementHandler);
+
+      return () =>
+        kakao.maps.event.removeListener(map, "idle", movementHandler);
+    }
+  }, [map, dispatch]);
 
   // 사용자의 현재 위치 조회
   useEffect(() => {
     if (map) {
       if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          ({ coords }) => {
-            const newUserCoords = new kakao.maps.LatLng(
-              coords.latitude,
-              coords.longitude
-            );
+        navigator.geolocation.getCurrentPosition(({ coords }) => {
+          const newUserCoords = new kakao.maps.LatLng(
+            coords.latitude,
+            coords.longitude
+          );
 
-            dispatch(createUserCoordsAction(newUserCoords));
-          },
-          err => {
-            dispatch(createUserCoordsAction(map.getCenter()));
-          }
-        );
+          dispatch(createUserCoordsAction(newUserCoords));
+        });
       } else {
         alert(
           "이 브라우저에서는 위치 기능을 사용할 수 없습니다. 우측 상단의 검색 기능을 이용하시거나 다른 브라우저로 다시 접속해주세요."
@@ -98,30 +89,39 @@ const Map = () => {
     }
   }, [dispatch, map]);
 
-  // userCoords에 marker 렌더
+  // userCoords에 marker와 500미터 반경 렌더
   useEffect(() => {
-    let marker;
-
     if (map && userCoords) {
       map.setCenter(userCoords);
-      marker = new kakao.maps.Marker({ position: userCoords });
+      const marker = new kakao.maps.Marker({ position: userCoords });
 
+      const rad = new kakao.maps.Circle({
+        center: userCoords,
+        radius: 500,
+        strokeWeight: 2,
+        strokeColor: "#ff6f6e",
+        strokeOpacity: 1,
+        strokeStyle: "solid",
+        fillColor: "#2c3e50",
+        fillOpacity: 0.2
+      });
+
+      rad.setMap(map);
       marker.setMap(map);
-    }
 
-    return () => {
-      if (marker) {
+      return () => {
+        rad.setMap(null);
         marker.setMap(null);
-      }
-    };
+      };
+    }
   }, [userCoords, map]);
 
   // 지도 중심에서 500m 반경 이내의 스테이션을 closeStations 상태 배열에 넣음
   useEffect(() => {
-    if (map) {
-      dispatch(createCloseStationsAction(stations, centerCoords));
+    if (map && userCoords) {
+      dispatch(createCloseStationsAction(stations, userCoords));
     }
-  }, [centerCoords, dispatch, stations, map]);
+  }, [userCoords, dispatch, stations, map]);
 
   // closeStations에 대한 marker를 지도에 렌더
   useEffect(() => {
@@ -159,33 +159,6 @@ const Map = () => {
       kakao.maps.event.addListener(map, "center_changed", clearMarkers);
     });
   }, [closeStations, map]);
-
-  // 지도 중심에서 500m 반경을 표시
-  useEffect(() => {
-    if (map) {
-      const rad = new kakao.maps.Circle({
-        center: map.getCenter(),
-        radius: 500,
-        strokeWeight: 2,
-        strokeColor: "#ff6f6e",
-        strokeOpacity: 1,
-        strokeStyle: "solid",
-        fillColor: "#2c3e50",
-        fillOpacity: 0.2
-      });
-
-      rad.setMap(map);
-
-      const removeRad = () => {
-        rad.setMap(null);
-      };
-
-      kakao.maps.event.addListener(map, "center_changed", removeRad);
-
-      return () =>
-        kakao.maps.event.removeListener(map, "center_changed", removeRad);
-    }
-  }, [map, centerCoords]);
 
   return (
     <>
